@@ -1,0 +1,5 @@
+config BN_FACTORY_PROV
+	tristate "Enable factory provisioing validation"
+	default y 
+	help
+	  This option adds kernel support for validating factory provisioing
