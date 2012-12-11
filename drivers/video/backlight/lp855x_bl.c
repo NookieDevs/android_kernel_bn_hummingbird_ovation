@@ -110,7 +110,7 @@ static int lp855x_i2c_read(struct lp855x *lp, u8 reg, u8 *data, u8 len)
 
 static int lp855x_i2c_write(struct lp855x *lp, u8 reg, u8 *data, u8 len)
 {
-	s32 ret;
+	s32 ret = 0;
 
 	mutex_lock(&lp->xfer_lock);
 	ret = i2c_smbus_write_i2c_block_data(lp->client, reg, len, data);
@@ -525,6 +525,16 @@ static void lp855x_early_suspend1(struct early_suspend *h)
 static void lp855x_late_resume2(struct early_suspend *h)
 {
 	struct lp855x *lp = container_of(h, struct lp855x, suspend2);
+	struct lp855x_platform_data *pd = lp->pdata;
+	u8 val = 0;
+
+	lp855x_read_byte(lp, CFG5_REG, &val);
+
+	if (pd->led_setting != val) {
+		dev_warn(lp->dev, "EPROM reset to defaults, 0x%02x expected 0x%02x\n", val, pd->led_setting);
+	}
+
+	lp855x_init_device(lp);
 	lp->power_enabled_state = 1;
 	lp855x_bl_update_status(lp->bl);
 }

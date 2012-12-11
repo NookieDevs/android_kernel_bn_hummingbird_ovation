@@ -1186,7 +1186,7 @@ static void omap_hsmmc_recover(struct mmc_host *mmc)
 	host->data = NULL;
 	omap_hsmmc_reset_controller_fsm(host,SRC);
 	omap_hsmmc_reset_controller_fsm(host,SRD);
-	printk("%s\n",__func__);
+	dev_warn(mmc_dev(host->mmc),"%s\n",__func__);
 }
 
 static void omap_hsmmc_do_irq(struct omap_hsmmc_host *host, int status)
@@ -1683,19 +1683,20 @@ static void set_data_timeout(struct omap_hsmmc_host *host,
 			timeout <<= 1;
 		}
 
-		dto = 14;
-		/*
-		dto = 31 - dto;
-		timeout <<= 1;
-		if (timeout && dto)
-			dto += 1;
-		if (dto >= 13)
-			dto -= 13;
-		else
-			dto = 0;
-		if (dto > 14)
+		if ( host->mmc->card && mmc_card_mmc(host->mmc->card))
 			dto = 14;
-		*/
+		else {
+			dto = 31 - dto;
+			timeout <<= 1;
+			if (timeout && dto)
+				dto += 1;
+			if (dto >= 13)
+				dto -= 13;
+			else
+				dto = 0;
+			if (dto > 14)
+				dto = 14;
+		}
 	}
 
 	reg &= ~DTO_MASK;

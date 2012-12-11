@@ -20,6 +20,8 @@
 #define ENABLE_BL	(1)
 #define DISABLE_BL	(0)
 
+#define LP8556_FAST (0x80)
+
 #define I2C_CONFIG(id)	id ## _I2C_CONFIG
 #define PWM_CONFIG(id)	id ## _PWM_CONFIG
 

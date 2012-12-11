@@ -259,7 +259,7 @@ static int lg_maxim9606_power_off(struct device *dev)
 static struct lp855x_platform_data lp8556_pdata = {
 	.name = "lcd-backlight",
 	.mode = REGISTER_BASED,
-	.device_control = LP8556_COMB1_CONFIG,
+	.device_control = LP8556_COMB1_CONFIG | LP8556_FAST,
 	.initial_brightness = INITIAL_BRT,
 	.max_brightness = MAX_BRT,
 	.led_setting = PS_MODE_4P4D | PWM_FREQ6916HZ,
@@ -392,6 +392,7 @@ static int auo_enable_dsi(struct omap_dss_device *dssdev)
 	}
 
 	gpio_direction_output(LCD_DCR_1V8_GPIO_EVT1B, 0);
+
 	return 0;
 }
 

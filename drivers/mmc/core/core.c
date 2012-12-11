@@ -220,7 +220,7 @@ void mmc_wait_for_req(struct mmc_host *host, struct mmc_request *mrq)
 
 	mmc_start_request(host, mrq);
 
-	if (host->index == 2) {
+	if (host->index != 0) {
 		while (!wait_for_completion_timeout(&complete, msecs_to_jiffies(1000))) {
 			if (host->ops->recover)
 				host->ops->recover(host);
