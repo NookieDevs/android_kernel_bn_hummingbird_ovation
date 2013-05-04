@@ -1384,6 +1384,40 @@ void dispc_set_cpr_coef(enum omap_channel channel,
 	dispc_write_reg(DISPC_CPR_COEF_B(channel), coef_b);
 }
 
+int dispc_init_cpr_coef(enum omap_channel channel,
+		struct omap_dss_cpr_coefs *coefs)
+{
+	u32 coef_r, coef_g, coef_b, config_reg;
+	int ret = 0;
+	if (channel != OMAP_DSS_CHANNEL_LCD && channel != OMAP_DSS_CHANNEL_LCD2)
+		return 0;
+
+	config_reg = (channel == OMAP_DSS_CHANNEL_LCD ? DISPC_CONFIG : DISPC_CONFIG2);
+
+	if ( REG_GET(config_reg, 15, 15) ) {
+
+		coef_r = dispc_read_reg(DISPC_CPR_COEF_R(channel));
+		coef_g = dispc_read_reg(DISPC_CPR_COEF_G(channel));
+		coef_b = dispc_read_reg(DISPC_CPR_COEF_B(channel));
+
+		coefs->rr = FLD_GET(coef_r, 31, 22);
+		coefs->rg = FLD_GET(coef_r, 20, 11);
+		coefs->rb = FLD_GET(coef_r, 9, 0);
+
+		coefs->gr = FLD_GET(coef_g, 31, 22);
+		coefs->gg = FLD_GET(coef_g, 20, 11);
+		coefs->gb = FLD_GET(coef_g, 9, 0);
+
+		coefs->br = FLD_GET(coef_b, 31, 22);
+		coefs->bg = FLD_GET(coef_b, 20, 11);
+		coefs->bb = FLD_GET(coef_b, 9, 0);
+		ret = 1;
+	}
+
+	DSSDBG("%s: rr[%d] gg[%d] bb[%d]", __FUNCTION__,coefs->rr, coefs->gg, coefs->bb);
+	return ret;
+}
+
 static void _dispc_set_vid_color_conv(enum omap_plane plane, bool enable)
 {
 	u32 val;
@@ -4494,7 +4528,6 @@ static int omap_dispchw_probe(struct platform_device *pdev)
 	int r = 0;
 	struct resource *dispc_mem;
 	struct clk *clk;
-
 	dispc.pdev = pdev;
 
 	clk = clk_get(&pdev->dev, "dss_clk");

@@ -223,15 +223,17 @@ void mmc_wait_for_req(struct mmc_host *host, struct mmc_request *mrq)
 	if (host->index != 0) {
 		while (!wait_for_completion_timeout(&complete, msecs_to_jiffies(1000))) {
 			if (host->ops->recover)
-				host->ops->recover(host);
-
-			if (mrq->cmd->retries) {
-				mrq->cmd->retries--;
-				host->ops->request(host, mrq);
-			} else {
-				mrq->cmd->error = -ETIMEDOUT;
-				break;
-			}
+				if (host->ops->recover(host)) {
+					wait_for_completion(&complete);
+				} else {
+					if (mrq->cmd->retries) {
+						mrq->cmd->retries--;
+						host->ops->request(host, mrq);
+					} else {
+						mrq->cmd->error = -ETIMEDOUT;
+						break;
+					}
+				}
 		}
 	} else {
 		wait_for_completion(&complete);

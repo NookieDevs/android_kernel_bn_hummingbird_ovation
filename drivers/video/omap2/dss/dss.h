@@ -454,6 +454,8 @@ void dispc_enable_zorder(enum omap_plane plane, bool enable);
 void dispc_enable_cpr(enum omap_channel channel, bool enable);
 void dispc_set_cpr_coef(enum omap_channel channel,
 		struct omap_dss_cpr_coefs *coefs);
+int dispc_init_cpr_coef(enum omap_channel channel,
+		struct omap_dss_cpr_coefs *coefs);
 void _dispc_setup_color_conv_coef(enum omap_plane plane,
 	const struct omap_dss_cconv_coefs *ct);
 

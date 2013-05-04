@@ -225,6 +225,7 @@ struct omap_hsmmc_host {
 	void	__iomem		*base;
 	resource_size_t		mapbase;
 	spinlock_t		irq_lock; /* Prevent races with irq handler */
+	spinlock_t		recover_lock; /* Prevent concurrent execution of irq and recover handlers */
 	unsigned int		id;
 	unsigned int		dma_len;
 	unsigned int		dma_sg_idx;
@@ -1175,9 +1176,12 @@ static inline void omap_hsmmc_reset_controller_fsm(struct omap_hsmmc_host *host,
 			__func__);
 }
 
-static void omap_hsmmc_recover(struct mmc_host *mmc)
+static int omap_hsmmc_recover(struct mmc_host *mmc)
 {
 	struct omap_hsmmc_host *host = mmc_priv(mmc);
+
+	if (unlikely(!spin_trylock(&host->recover_lock)))
+		return -1;
 
 	omap_hsmmc_disable_irq(host);
 	host->req_in_progress = 0;
@@ -1187,6 +1191,8 @@ static void omap_hsmmc_recover(struct mmc_host *mmc)
 	omap_hsmmc_reset_controller_fsm(host,SRC);
 	omap_hsmmc_reset_controller_fsm(host,SRD);
 	dev_warn(mmc_dev(host->mmc),"%s\n",__func__);
+	spin_unlock(&host->recover_lock);
+	return 0;
 }
 
 static void omap_hsmmc_do_irq(struct omap_hsmmc_host *host, int status)
@@ -1300,12 +1306,18 @@ static irqreturn_t omap_hsmmc_irq(int irq, void *dev_id)
 	struct omap_hsmmc_host *host = dev_id;
 	int status;
 
+
+	if (unlikely(!spin_trylock(&host->recover_lock)))
+		return IRQ_HANDLED;
+
 	status = OMAP_HSMMC_READ(host->base, STAT);
 	do {
 		omap_hsmmc_do_irq(host, status);
 		/* Flush posted write */
 		status = OMAP_HSMMC_READ(host->base, STAT);
 	} while (status & INT_EN_MASK);
+
+	spin_unlock(&host->recover_lock);
 
 	return IRQ_HANDLED;
 }
@@ -2478,6 +2490,7 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 	mmc->f_max	= 52000000;
 
 	spin_lock_init(&host->irq_lock);
+	spin_lock_init(&host->recover_lock);
 
 	host->iclk = clk_get(&pdev->dev, "ick");
 	if (IS_ERR(host->iclk)) {
