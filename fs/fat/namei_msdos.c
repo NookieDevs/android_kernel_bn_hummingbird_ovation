@@ -16,7 +16,7 @@ static long fatsdcard_id = -1;
 ssize_t show_sdcard_id(struct kobject * kobj, struct kobj_attribute * attr, char * buf);
 
 static struct kset *fat_kset;
-static struct kobj_attribute fatsdcard_show_id_attribute = __ATTR(id, 0666, show_sdcard_id, NULL);
+static struct kobj_attribute fatsdcard_show_id_attribute = __ATTR(id, 0664, show_sdcard_id, NULL);
 
 static struct attribute * fatsdcard_attributes[] = {
 	&fatsdcard_show_id_attribute.attr,

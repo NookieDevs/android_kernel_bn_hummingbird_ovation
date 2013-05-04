@@ -41,13 +41,13 @@ ssize_t bnprov_data_store(struct kobject * kobj, struct kobj_attribute * attr, c
 }
 
 static struct kobj_attribute module_store_attribute =
-	__ATTR(data, 0666, NULL, bnprov_data_store);
+	__ATTR(data, 0664, NULL, bnprov_data_store);
 
 static struct kobj_attribute module_wv_show_attribute =
-	__ATTR(wv, 0666, bnprov_wv_show, NULL);
+	__ATTR(wv, 0664, bnprov_wv_show, NULL);
 
 static struct kobj_attribute module_hdcp_show_attribute =
-	__ATTR(hdcp, 0666, bnprov_hdcp_show, NULL);
+	__ATTR(hdcp, 0664, bnprov_hdcp_show, NULL);
 
 
 static struct attribute * bnprov_attributes[] = {
