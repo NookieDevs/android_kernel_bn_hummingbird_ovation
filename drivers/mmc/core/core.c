@@ -228,18 +228,20 @@ void mmc_wait_for_req(struct mmc_host *host, struct mmc_request *mrq)
         /* only execute for wifi */
 	if (host->index == 2) {
 		while (!wait_for_completion_timeout(&complete, msecs_to_jiffies(1000))) {
-			if (host->ops->recover)
+                        printk(KERN_ERR "%s: ********** BOMB ******* \n", mmc_hostname(host));
+			if (host->ops->recover) {
 				if (host->ops->recover(host)) {
+                                        printk("%s: couldn't do host recovery\n", mmc_hostname(host));
 					wait_for_completion(&complete);
 				} else {
-					if (mrq->cmd->retries) {
-						mrq->cmd->retries--;
-						host->ops->request(host, mrq);
-					} else {
-						mrq->cmd->error = -ETIMEDOUT;
-						break;
-					}
+                                        if (mrq->cmd->retries)
+                                            printk("%s: cmd retry count %d\n", mmc_hostname(host), mrq->cmd->retries);
+
+                                        printk("%s: ETIMEDOUT\n", mmc_hostname(host));
+                                        mrq->cmd->error = -ETIMEDOUT;
+                                        break;
 				}
+                        }
 		}
 	} else {
 		wait_for_completion(&complete);

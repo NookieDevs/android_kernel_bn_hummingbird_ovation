@@ -1183,14 +1183,22 @@ static int omap_hsmmc_recover(struct mmc_host *mmc)
 	if (unlikely(!spin_trylock(&host->recover_lock)))
 		return -1;
 
+	dev_warn(mmc_dev(host->mmc),"%s\n",__func__);
+
 	omap_hsmmc_disable_irq(host);
 	host->req_in_progress = 0;
 	host->mrq = NULL;
 	host->cmd = NULL;
-	host->data = NULL;
+        if (host->dma_ch == -1)
+            dev_warn(mmc_dev(host->mmc),"no DMA active\n");
+        else {
+            dev_warn(mmc_dev(host->mmc),"DMA cleanup\n");
+            omap_hsmmc_dma_cleanup(host, -ETIMEDOUT);
+        }
+
+        host->data = NULL;
 	omap_hsmmc_reset_controller_fsm(host,SRC);
 	omap_hsmmc_reset_controller_fsm(host,SRD);
-	dev_warn(mmc_dev(host->mmc),"%s\n",__func__);
 	spin_unlock(&host->recover_lock);
 	return 0;
 }
